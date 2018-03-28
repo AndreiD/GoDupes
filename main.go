@@ -65,13 +65,25 @@ func main() {
 
 	info("~~~~ Welcome to Super Fast Go Duplicates Finder ~~~~\n")
 
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		red("Error: Please enter the path for scanning\n")
 		os.Exit(0)
 	}
 
 	thedir := flag.String("dir", "/home", "the path to the location you want to scan")
+	delete := flag.String("delete", "no", "no = test mode, yes = it will delete them")
 	flag.Parse()
+
+	switch *delete {
+	case "no":
+		info("This scripts runs in test mode!")
+	case "yes":
+		info("This scripts runs in deleting mode!")
+	default:
+		red("please use -delete=no or -delete=yes as arguments")
+		os.Exit(1)
+
+	}
 
 	dirScan, err := filepath.Abs(*thedir)
 	if err != nil {
