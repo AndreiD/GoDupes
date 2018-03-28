@@ -10,6 +10,7 @@ import (
 	"crypto/md5"
 	"strconv"
 	"io"
+	"flag"
 )
 
 //github.com/OneOfOne/xxhash
@@ -64,12 +65,15 @@ func main() {
 
 	info("~~~~ Welcome to Super Fast Go Duplicates Finder ~~~~\n")
 
-	if len(os.Args) != 2 {
+	if len(os.Args) < 2 {
 		red("Error: Please enter the path for scanning\n")
 		os.Exit(0)
 	}
 
-	dirScan, err := filepath.Abs(os.Args[1])
+	thedir := flag.String("dir", "/home", "the path to the location you want to scan")
+	flag.Parse()
+
+	dirScan, err := filepath.Abs(*thedir)
 	if err != nil {
 		red("error: %s", err)
 		os.Exit(1)
