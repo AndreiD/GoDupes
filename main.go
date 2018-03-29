@@ -141,7 +141,6 @@ func main() {
 				success("duplicates on %s | %s\n", currFile.path, nextFile.path)
 
 				if *xdelete == "yes" {
-
 					//if it contains copy in the filename, delete it
 					fileToDelete := nextFile
 					if strings.Contains(strings.ToLower(currFile.path), "copy") {
