@@ -6,12 +6,12 @@ import (
 	"github.com/fatih/color"
 	"runtime"
 	"strings"
-	"crypto/md5"
-	"io"
 	"flag"
 	"fmt"
-	"encoding/hex"
 	"sort"
+	"crypto/md5"
+	"io"
+	"encoding/hex"
 )
 
 //github.com/OneOfOne/xxhash
@@ -59,8 +59,6 @@ func main() {
 	color.NoColor = false
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	var hashes []string
-
 	info("~~~~ Welcome to Super Fast Go Duplicates Finder ~~~~\n")
 
 	if len(os.Args) < 3 {
@@ -101,48 +99,63 @@ func main() {
 
 	info("A total of %d files were found\n\n", len(xfiles))
 
-	//brute force...is bad
-	for _, xfile := range xfiles {
+	//sort them by size
+	sort.Slice(xfiles, func(i, j int) bool {
+		return xfiles[i].size > xfiles[j].size
+	})
 
-		yfile, err := os.Open(xfile.path)
-		if err != nil {
-			red("error: %s", err)
-			os.Exit(1)
-		}
+	for i := 0; i < len(xfiles)-1; i++ {
+		currFile := xfiles[i]
+		nextFile := xfiles[i+1]
 
-
-		xhash := md5.New()
-
-		if _, err := io.Copy(xhash, yfile);  err != nil {
-			red("error: %s", err)
-			os.Exit(1)
-		}
-
-		yfile.Close()
-
-		xfile.sum = hex.EncodeToString(xhash.Sum(nil))
-
-		sort.Strings(hashes)
-
-		target := xfile.sum
-
-		sort.Strings(hashes)
-		i := sort.Search(len(hashes), func(i int) bool { return hashes[i] >= target })
-		if i < len(hashes) && hashes[i] == target {
-			if *xdelete == "yes" {
-				if xerr := os.Remove(xfile.path); xerr != nil {
-					red("error deleting file %s\n", xerr)
-				}else{
-					success("duplicate on %s is deleted!\n", xfile.path)
-				}
-
-			}else{
-				warn("duplicate on %s\n", xfile.path)
+		//only if they have equal size...
+		if currFile.size == nextFile.size {
+			//...compare their hash
+			xhash := md5.New()
+			file1, err := os.Open(currFile.path)
+			if err != nil {
+				red("error: %s", err)
+				os.Exit(1)
 			}
-		} else {
-			hashes = append(hashes, xfile.sum)
-		}
+			if _, err := io.Copy(xhash, file1); err != nil {
+				red("error: %s", err)
+				os.Exit(1)
+			}
+			file1.Close()
+			currFile.sum = hex.EncodeToString(xhash.Sum(nil))
 
+			xhash = md5.New()
+			file2, err := os.Open(nextFile.path)
+			if err != nil {
+				red("error: %s", err)
+				os.Exit(1)
+			}
+			if _, err := io.Copy(xhash, file2); err != nil {
+				red("error: %s", err)
+				os.Exit(1)
+			}
+			file2.Close()
+			nextFile.sum = hex.EncodeToString(xhash.Sum(nil))
+
+			if currFile.sum == nextFile.sum {
+				success("duplicates on %s | %s\n", currFile.path, nextFile.path)
+
+				if *xdelete == "yes" {
+
+					//if it contains copy in the filename, delete it
+					fileToDelete := nextFile
+					if strings.Contains(strings.ToLower(currFile.path), "copy") {
+						fileToDelete = currFile
+					}
+					if xerr := os.Remove(fileToDelete.path); xerr != nil {
+						red("error deleting file %s\n", xerr)
+					} else {
+						success("duplicate on %s is deleted!\n", fileToDelete.path)
+					}
+				}
+			}
+
+		}
 	}
 
 }
