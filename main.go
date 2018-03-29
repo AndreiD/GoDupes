@@ -6,11 +6,12 @@ import (
 	"github.com/fatih/color"
 	"runtime"
 	"strings"
-	"hash"
 	"crypto/md5"
-	"strconv"
 	"io"
 	"flag"
+	"fmt"
+	"encoding/hex"
+	"sort"
 )
 
 //github.com/OneOfOne/xxhash
@@ -18,12 +19,10 @@ import (
 type XFile struct {
 	path string
 	size int64
-	sum  hash.Hash
+	sum  string
 }
 
 var xfiles = make([]*XFile, 0)
-
-
 
 func collectFiles(fp string, info os.FileInfo, err error) error {
 	if err != nil {
@@ -51,7 +50,7 @@ func collectFiles(fp string, info os.FileInfo, err error) error {
 	}
 
 	if info.Size() > 0 {
-		xfiles = append(xfiles, &XFile{path: fp, size: info.Size(), sum: md5.New()})
+		xfiles = append(xfiles, &XFile{path: fp, size: info.Size(), sum: ""})
 	}
 	return nil
 }
@@ -59,6 +58,8 @@ func collectFiles(fp string, info os.FileInfo, err error) error {
 func main() {
 	color.NoColor = false
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	var hashes []string
 
 	info("~~~~ Welcome to Super Fast Go Duplicates Finder ~~~~\n")
 
@@ -68,14 +69,14 @@ func main() {
 	}
 
 	thedir := flag.String("dir", "/home", "the path to the location you want to scan")
-	delete := flag.String("delete", "no", "no = test mode, yes = it will delete them")
+	xdelete := flag.String("delete", "no", "no = test mode, yes = it will DELETE them!")
 	flag.Parse()
 
-	switch *delete {
+	switch *xdelete {
 	case "no":
-		info("This scripts runs in test mode!")
+		info("This scripts runs in test mode!\n")
 	case "yes":
-		info("This scripts runs in deleting mode!")
+		info("This scripts runs in deleting mode!\n")
 	default:
 		red("please use -delete=no or -delete=yes as arguments")
 		os.Exit(1)
@@ -91,33 +92,56 @@ func main() {
 	success("Scanning: " + dirScan)
 
 	//get the files
-	err = filepath.Walk(dirScan, collectFiles)
-
-	if err != nil {
-		red("error: %s", err)
+	if er := filepath.Walk(dirScan, collectFiles); er != nil {
+		red("error: %s", er)
 		os.Exit(1)
 	}
 
-	info("A total of " + strconv.Itoa(len(xfiles)) + " files were found")
+	fmt.Println()
+
+	info("A total of %d files were found\n\n", len(xfiles))
 
 	//brute force...is bad
-	for _, file := range xfiles {
+	for _, xfile := range xfiles {
 
-		yfile, err := os.Open(file.path)
+		yfile, err := os.Open(xfile.path)
 		if err != nil {
 			red("error: %s", err)
 			os.Exit(1)
 		}
-		defer yfile.Close()
+
 
 		xhash := md5.New()
-		_, err = io.Copy(xhash, yfile)
-		if err != nil {
+
+		if _, err := io.Copy(xhash, yfile);  err != nil {
 			red("error: %s", err)
 			os.Exit(1)
 		}
 
-		file.sum = xhash
+		yfile.Close()
+
+		xfile.sum = hex.EncodeToString(xhash.Sum(nil))
+
+		sort.Strings(hashes)
+
+		target := xfile.sum
+
+		sort.Strings(hashes)
+		i := sort.Search(len(hashes), func(i int) bool { return hashes[i] >= target })
+		if i < len(hashes) && hashes[i] == target {
+			if *xdelete == "yes" {
+				if xerr := os.Remove(xfile.path); xerr != nil {
+					red("error deleting file %s\n", xerr)
+				}else{
+					success("duplicate on %s is deleted!\n", xfile.path)
+				}
+
+			}else{
+				warn("duplicate on %s\n", xfile.path)
+			}
+		} else {
+			hashes = append(hashes, xfile.sum)
+		}
 
 	}
 
