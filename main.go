@@ -23,10 +23,7 @@ type XFile struct {
 
 var xfiles = make([]*XFile, 0)
 
-// Let'em be colors
-var red = color.New(color.FgRed).PrintfFunc()
-var info = color.New(color.Bold, color.FgBlue).PrintlnFunc()
-var success = color.New(color.Bold, color.FgGreen).PrintlnFunc()
+
 
 func collectFiles(fp string, info os.FileInfo, err error) error {
 	if err != nil {
