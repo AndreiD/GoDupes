@@ -21,7 +21,12 @@ xxHash is an Extremely fast Hash algorithm, running at RAM speed limits.
 an old i5 3470, Western Digital Black 7200rpm HDD
 4.24 seconds on 151GB (24082 files)
 
+## Todo:
 
+- optimize it even more
+- add a progress bar
+
+## License:
 <pre>
 Copyright (C) 2018 me
 

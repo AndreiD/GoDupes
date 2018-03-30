@@ -57,7 +57,7 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	start := time.Now()
 
-	info("~~~~ Welcome to Super Fast Go Duplicates Finder ~~~~\n")
+	info("Welcome to Super Fast Go Duplicates Finder\n")
 
 	if len(os.Args) < 3 {
 		red("Error: Please enter the path for scanning\n")
