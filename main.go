@@ -7,7 +7,6 @@ import (
 	"runtime"
 	"strings"
 	"flag"
-	"fmt"
 	"sort"
 	"time"
 )
@@ -40,9 +39,8 @@ func collectFiles(fp string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	//no shortcuts
+	//no symlinks
 	if !info.Mode().IsRegular() {
-		// ignore symlinks
 		return nil
 	}
 
@@ -60,7 +58,7 @@ func main() {
 	info("Welcome to Super Fast Go Duplicates Finder\n")
 
 	if len(os.Args) < 3 {
-		red("Error: Please enter the path for scanning\n")
+		red("Error: Please enter all the arguments for this program\n")
 		os.Exit(0)
 	}
 
@@ -68,6 +66,7 @@ func main() {
 	xdelete := flag.String("delete", "no", "no = test mode, yes = it will DELETE them!")
 	flag.Parse()
 
+	//some checks
 	switch *xdelete {
 	case "no":
 		info("This scripts runs in test mode!\n")
@@ -81,7 +80,7 @@ func main() {
 
 	dirScan, err := filepath.Abs(*thedir)
 	if err != nil {
-		red("error: %s", err)
+		red("error: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -93,9 +92,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println()
-
-	info("A total of %d files were found\n\n", len(xfiles))
+	info("\nA total of %d files were found\n\n", len(xfiles))
 
 	//sort them by size
 	sort.Slice(xfiles, func(i, j int) bool {
