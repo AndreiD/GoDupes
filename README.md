@@ -10,7 +10,7 @@ Written in Go (Golang) as a kata
 Benchmarks:
 
 an old i5 3470, Western Digital Black 7200rpm HDD
-2 minutes on 151GB (24082 files)
+4.24 seconds on 151GB (24082 files)
 
 
 Copyright (C) 2018 me
