@@ -5,6 +5,13 @@ Find Duplicate Files ------ as fast as possible!
 Written in Go (Golang) as a kata
               Version 2, December 2004
 
+<img src="https://raw.githubusercontent.com/AndreiD/GoDupes/master/assets/screenshot1.JPG" alt="godupes" />
+
+Benchmarks:
+
+an old i5 3470, Western Digital Black 7200rpm HDD
+2 minutes on 151GB (24082 files)
+
 
 Copyright (C) 2018 me
 
