@@ -9,17 +9,14 @@ import (
 	"flag"
 	"fmt"
 	"sort"
-	"crypto/md5"
-	"io"
-	"encoding/hex"
+	"time"
 )
 
-//github.com/OneOfOne/xxhash
 
 type XFile struct {
 	path string
 	size int64
-	sum  string
+	hash  uint64
 }
 
 var xfiles = make([]*XFile, 0)
@@ -50,7 +47,7 @@ func collectFiles(fp string, info os.FileInfo, err error) error {
 	}
 
 	if info.Size() > 0 {
-		xfiles = append(xfiles, &XFile{path: fp, size: info.Size(), sum: ""})
+		xfiles = append(xfiles, &XFile{path: fp, size: info.Size()})
 	}
 	return nil
 }
@@ -58,6 +55,7 @@ func collectFiles(fp string, info os.FileInfo, err error) error {
 func main() {
 	color.NoColor = false
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	start := time.Now()
 
 	info("~~~~ Welcome to Super Fast Go Duplicates Finder ~~~~\n")
 
@@ -87,7 +85,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	success("Scanning: " + dirScan)
+	success("Scanning: " + dirScan +"\n")
 
 	//get the files
 	if er := filepath.Walk(dirScan, collectFiles); er != nil {
@@ -111,33 +109,10 @@ func main() {
 		//only if they have equal size...
 		if currFile.size == nextFile.size {
 			//...compare their hash
-			xhash := md5.New()
-			file1, err := os.Open(currFile.path)
-			if err != nil {
-				red("error: %s", err)
-				os.Exit(1)
-			}
-			if _, err := io.Copy(xhash, file1); err != nil {
-				red("error: %s", err)
-				os.Exit(1)
-			}
-			file1.Close()
-			currFile.sum = hex.EncodeToString(xhash.Sum(nil))
+			currFile.hash = HashXXHash(currFile.path)
+			nextFile.hash = HashXXHash(nextFile.path)
 
-			xhash = md5.New()
-			file2, err := os.Open(nextFile.path)
-			if err != nil {
-				red("error: %s", err)
-				os.Exit(1)
-			}
-			if _, err := io.Copy(xhash, file2); err != nil {
-				red("error: %s", err)
-				os.Exit(1)
-			}
-			file2.Close()
-			nextFile.sum = hex.EncodeToString(xhash.Sum(nil))
-
-			if currFile.sum == nextFile.sum {
+			if currFile.hash == nextFile.hash {
 				success("duplicates on %s | %s\n", currFile.path, nextFile.path)
 
 				if *xdelete == "yes" {
@@ -156,5 +131,7 @@ func main() {
 
 		}
 	}
+
+	info("\nGoDupes finished in %s", time.Since(start))
 
 }
