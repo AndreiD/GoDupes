@@ -16,11 +16,6 @@ you can see the tests of various algos in hashhelper_test.go
 #### The chosen algo is <strong>xxHash</strong>
 xxHash is an Extremely fast Hash algorithm, running at RAM speed limits.
 
-## Benchmarks:
-
-an old i5 3470, Western Digital Black 7200rpm HDD
-4.24 seconds on 151GB (24082 files)
-
 ## Todo:
 
 - optimize it even more
